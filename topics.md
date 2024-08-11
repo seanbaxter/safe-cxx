@@ -266,6 +266,30 @@ We want unbound lifetimes:
 
 Part of this project will be to establish when bound lifetimes are permitted, when they are required, and when they are forbidden.
 
+## A more assertive claim on lifetime binders
+
+I think my current implementation is mostly correct.
+
+There are two kinds of type template parameters:
+1. `typename T` - Specializes types with unbound lifetimes.
+1. `typename T+` - Specializes types with bound lifetimes.
+
+You'll want the `T+` variant when writing containers like tuple and vector.
+
+Specializing a `T` type parameter on a type with bound lifetimes should be made _ill-formed_. In the unlikely event you have a type with bound lifetimes, strip them with `T/0`, the null lifetime.
+
+Specializing a `T+` type parameter ignores bound lifetimes on the arguments. It performs deduction, and comes out with an unbound lifetime. It then invents new _template lifetime parameters_ for each lifetime binder in the deduced type. Eg, specializing on `const [string_view]^` creates two template lifetime parameters: `#T0.0` and `#T0.1`, resulting in a deduced type `const [string_view/#T0.0]^/#T0.1`. The invented parameters are assigned in depth-first order.
+
+If the user specializes `tuple<int^/a, int^/b>`, the tuple has invented lifetime parameters `#T0.0.0` and `T0.1.0` (major index, minor index, depth-first ordering). The usage desugars to `tuple<int^, int^>/a/b`. 
+
+Argument deduction in functions seems to fall out naturally. I think here it is okay for `T` to invent template lifetime parameters.
+
+```cpp
+template<typename T>
+void f(T a, T b);
+```
+
+Remember that expressions have types with unbound lifetimes. `f(x, y)` specializes T with unbound lifetimes. The compiler invents enough lifetime parameters to bind the argument. Then the caller, at the MIR level, establishes constraints between the region variables for the argument expression `x` and `y` and the SCCs of the invented lifetime parameters of the function.
 
 ## Parameter ownership and ABI
 
