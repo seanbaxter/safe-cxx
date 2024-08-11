@@ -11,6 +11,7 @@ Inside a safe context:
 * Cannot use _asm-statement_.
 * Cannot access non-const objects with static storage duration.
 * Cannot name union alternatives.
+* Cannot call unsafe functions, since those may include any of the above.
 * Other? What kinds of conversions?
 
 ##  _lifetime-parameters-list_ and _where-clauses_
