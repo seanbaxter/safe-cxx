@@ -183,6 +183,10 @@ If we use the ref-qualifier form, should we permit naming data members and membe
 
 In the current implementation, pointers and references `T*` and `T&` are bivariant in their lifetimes in T. That means that no lifetime calculations are performed after we hit a legacy reference or pointer. In one sense, this isn't unsound, because it's unsafe to dereference these types, so it's up to the programmer to verify the preconditions. But it's clearly not what is wanted. It makes sense to adopt Rust's convention of covariance for `const T&` and `const T*` and invariance for `T& and T*`. Can we have a better story than using `NonNull` or `Unique` to create covariance access of pointers? It's almost like raw pointers should have explicit variance as part of the type.
 
+## Variances, implied constraints and virtual functions
+
+Are virtual function calls safe? How do we account for additional variances and implied constraints that may be put on the lifetime parameters of the base class from the derived class's implementation? If the base pointer doesn't satisfy those implied constraints, we have a soundness violation. I imagine HRTBs address this same issue, but my knowledge of them is poor.
+
 ## Phantom data
 
 Currently phantom data is implemented with a special member name `__phantom_data`. It's never initialized, and it won't show up for data layout or reflection. This gets around having to introduce zero-length types. I feel this design is prone to misuse, since you can write a constructor that compiles but doesn't actually constrain the lifetimes on the phantom data.
@@ -250,6 +254,10 @@ There are other options than marking the relocate ABI as part of the function's 
 Rust people complain about not knowing if `.clone()` is cheap or expensive. Safe C++ already has one advantage here: if a type is trivially copyable, then `cpy` or `rel` doesn't have to be used to convert an lvalue to a prvalue; the standard conversion will kick in and you get the trivial copy. In this case, you get clone that's guaranteed "cheap," in the sense that it's just a memcpy. That's because rel is always opt in, rather the default.
 
 Should there be some other mechanism to distinguish cheap vs non-cheap non-trivial copies? 
+
+## Overloading based on `safe`
+
+
 
 # Library
 
