@@ -1,5 +1,23 @@
 # Language features
 
+## New keywords
+
+`#feature on safety` enables new keywords:
+
+* `safe`
+* `unsafe`
+* `cpy`
+* `rel`
+* `drp`
+* `addr`
+* `mut`
+* `choice`
+* `match`
+* `interface`
+* `dyn`
+* `impl`
+* `self`
+
 ## _safe-specifier_
 
 `safe` is a specifier like _noexcept-specifier_.
