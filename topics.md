@@ -209,7 +209,7 @@ After argument deduction, template parameters with a `+` modifier implicitly add
 template<typename T>
 struct Vec;
 
-Vec<int^_> vec;
+Vec<int^/_> vec;
 ```
 
 The placeholder lifetime on the argument is irrelevant. During borrow checking, those lifetimes are erased and new region are assigned to all bound lifetimes. But it does matter during argument deduction, because Vec's T template parameter should have one associated lifetime parameter, the template lifetime parameter T.0. When a template parameter is specialized on a type, what happens to the type's bound or unbound lifetimes? Are they stripped so the template parameter? is unbound? Are they added so the template parameter is bound? Or are they transfered, so it has bound and unbound lifetimes in the same places as the template argument? Is there some kind of test?
