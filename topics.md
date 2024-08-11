@@ -254,6 +254,18 @@ static_assert(is_same<int^, int^>::value);
 
 Should this pass the assert or not? That depends on how unbound lifetimes are handled. If T1 and T2 both deduce to `int^` without bound lifetimes, then they are the same. But if new independent lifetimes are created, say `int^/#0` and `int^/#1`, then they don't compare the same, because their lifetimes differ, and choosing the partial specialization would efface that difference.
 
+Note that expressions always have unbound lifetime. Naming a function parameter or a data member with a bound lifetime yields an lvalue expression where the type has stripped lifetimes. That's because lifetime parameters are only enforced at the function boundary: it's a contract between arguments and the function's SCCs, and between the function's SCCs and the result object.
+
+We want bound lifetimes:
+* On function parameter types.
+* On function return types.
+* On data member types.
+
+We want unbound lifetimes:
+* On expression types.
+
+Part of this project will be to establish when bound lifetimes are permitted, when they are required, and when they are forbidden.
+
 
 ## Parameter ownership and ABI
 
@@ -272,6 +284,24 @@ There are other options than marking the relocate ABI as part of the function's 
 Rust people complain about not knowing if `.clone()` is cheap or expensive. Safe C++ already has one advantage here: if a type is trivially copyable, then `cpy` or `rel` doesn't have to be used to convert an lvalue to a prvalue; the standard conversion will kick in and you get the trivial copy. In this case, you get clone that's guaranteed "cheap," in the sense that it's just a memcpy. That's because rel is always opt in, rather the default.
 
 Should there be some other mechanism to distinguish cheap vs non-cheap non-trivial copies? 
+
+## f-strings (Rust-style printing)
+
+I've done a lot of work on fstrings in Circle. Currently I'm tokenizing the format specifier inside the frontend after the preprocessor has tokenized the string literal. For more accurate errors, I should move tokenization into the preprocessor. `f"hello {:3} {:4}"` would then not appear as one string token, but as an f-string opener, string fragment tokens, braces and colons, etc, and then an f-string closer.
+
+Internally I have these interface declarations:
+
+```cpp
+namespace fmt {
+
+  interface fstring;
+  interface write;
+
+  interface display;
+}
+```
+
+The frontend has to connect f-string evaluation to these interfaces. Rust uses type erasure to keep compile times and compile sizes small, at the cost of execution efficiency. 
 
 ## Overloading based on `safe`
 
